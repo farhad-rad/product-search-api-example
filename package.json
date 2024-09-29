@@ -1,0 +1,37 @@
+{
+  "name": "product-search-api-example",
+  "version": "1.0.0",
+  "description": "This is an open-source sample of Product Search API with Express.js, MySQL, ElasticSearch, and Redis",
+  "main": "dist/main.js",
+  "scripts": {
+    "dev": "nodemon --exec ts-node src/main.ts",
+    "build": "tsc",
+    "start:ts": "ts-node src/main.ts",
+    "start": "npm run build && node ."
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/farhad-rad/product-search-api-example.git"
+  },
+  "author": "Farhad Rad <farhad.rad.official@gmail.com> (https://davoodi.info)",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/farhad-rad/product-search-api-example/issues"
+  },
+  "homepage": "https://github.com/farhad-rad/product-search-api-example#readme",
+  "dependencies": {
+    "@elastic/elasticsearch": "^8.15.0",
+    "body-parser": "^1.20.3",
+    "express": "^4.21.0",
+    "ioredis": "^5.4.1",
+    "mysql2": "^3.11.3"
+  },
+  "devDependencies": {
+    "@types/express": "^5.0.0",
+    "@types/node": "^22.7.4",
+    "@types/redis": "^4.0.11",
+    "nodemon": "^3.1.7",
+    "ts-node": "^10.9.2",
+    "typescript": "^5.6.2"
+  }
+}
