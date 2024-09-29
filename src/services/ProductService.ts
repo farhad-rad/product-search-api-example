@@ -9,12 +9,10 @@ export class ProductService {
   private static instance: ProductService;
   private mysqlRepo: MySqlProductRepository;
   private elasticRepo: ElasticSearchRepository;
-  // private cacheService: CacheService;
 
   private constructor() {
     this.mysqlRepo = MySqlProductRepository.getInstance();
     this.elasticRepo = ElasticSearchRepository.getInstance();
-    // this.cacheService = CacheService.getInstance();
   }
 
   public static getInstance(): ProductService {
@@ -30,7 +28,6 @@ export class ProductService {
       await this.elasticRepo.indexNewProduct(product);
       await connection.commit();
 
-      // this.cacheService.invalidateAffectedResults(product);
       return product;
     } catch (error) {
       await connection.rollback();
@@ -41,24 +38,16 @@ export class ProductService {
   }
 
   async getProducts(filters: any): Promise<any> {
-    // const cachedResult = await this.cacheService.getCachedResult(filters);
-    // if (cachedResult) {
-    //   return cachedResult;
-    // }
-
     const { ids, total } = await this.elasticRepo.searchAmongProducts(filters);
 
     if (ids.length === 0) {
       return { products: [], total: 0 };
     }
 
-    filters.ids = ids;
-
-    const products = await this.mysqlRepo.getPaginatedList(filters);
+    const products = await this.mysqlRepo.getPaginatedList({ ids, ...filters });
 
     const result = { products, total };
 
-    // await this.cacheService.cacheResult(filters, result);
     return result;
   }
 }

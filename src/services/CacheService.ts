@@ -1,5 +1,6 @@
 import { createClient, RedisClientType } from "redis";
 import { createHash } from "crypto";
+import { IProductFilters } from "../models/IProductFilters";
 
 export class CacheService {
   private static instance: CacheService;
@@ -14,18 +15,14 @@ export class CacheService {
     return (CacheService.instance ??= new CacheService());
   }
 
-  private generateRequestSignatureHash(filters: any): string {
-    const filterString = `${filters.name || ""}_${filters.category || ""}_${
-      filters.priceMin || ""
-    }_${filters.priceMax || ""}_${filters.createdSince || ""}_${
-      filters.page || 1
-    }`;
-    return createHash("sha256").update(filterString).digest("hex");
+  private generateRequestSignatureHash(filters: IProductFilters): string {
+    return createHash("sha256").update(JSON.stringify(filters)).digest("hex");
   }
 
   async getCachedResult(filters: any): Promise<any | null> {
     const hash = this.generateRequestSignatureHash(filters);
     const result = await this.client.hGet("request_responses", hash);
+    console.log(result);
     return result ? JSON.parse(result) : null;
   }
 
@@ -33,8 +30,12 @@ export class CacheService {
     const hash = this.generateRequestSignatureHash(filters);
 
     await this.client.hIncrBy("request_hits", hash, 1);
-    await this.client.hSet("request_filters", hash, JSON.stringify(filters));
-    await this.client.hSet("request_responses", hash, JSON.stringify(result));
+    const totalHits = await this.client.hGet("request_hits", hash);
+    console.log(totalHits);
+    if (totalHits && parseInt(totalHits) >= 10) {
+      await this.client.hSet("request_filters", hash, JSON.stringify(filters));
+      await this.client.hSet("request_responses", hash, JSON.stringify(result));
+    }
 
     this.runCacheMaintenance();
   }

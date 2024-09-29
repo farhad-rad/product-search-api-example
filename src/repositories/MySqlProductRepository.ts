@@ -65,10 +65,9 @@ export class MySqlProductRepository implements IRepository<Product> {
     params.push(filters.limit, filters.offset);
     const formattedQuery = this.pool.format(sql, params);
 
-    const [_c] = await this.pool.execute(formattedQuery);
+    const [_c] = await this.pool.execute(fomattedCountQuery);
     const total = (_c as any)[0]?.c ?? 0;
     const [rows] = await this.pool.execute(formattedQuery);
-    console.log(total, rows);
     return rows as Product[];
   }
 
