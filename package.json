@@ -6,6 +6,7 @@
   "scripts": {
     "dev": "nodemon --exec ts-node src/main.ts",
     "build": "tsc",
+    "initialize": "ts-node src/initializer.ts",
     "start:ts": "ts-node src/main.ts",
     "start": "npm run build && node ."
   },
