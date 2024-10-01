@@ -33,18 +33,5 @@ export class CacheService {
       await this.client.hSet("request_filters", hash, JSON.stringify(filters));
       await this.client.hSet("request_responses", hash, JSON.stringify(result));
     }
-
-    this.runCacheMaintenance();
-  }
-
-  private runCacheMaintenance(): void {
-    // const child = fork(
-    //   path.resolve(__dirname, "../child_processes/cacheInvalidationProcess.js")
-    // );
-    // child.send({ product });
-  }
-
-  async invalidateAffectedResults(newProduct: any): Promise<void> {
-    // TODO: call child process to invalidate cached results that might be affected by product change
   }
 }

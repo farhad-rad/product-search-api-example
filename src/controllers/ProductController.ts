@@ -3,6 +3,8 @@ import { ProductService } from "../services/ProductService";
 import { ControllerBase } from "../contracts/ControllerBase";
 import { CacheService } from "../services/CacheService";
 import { IProductFilters } from "../models/IProductFilters";
+import { ChildProcessService } from "../services/ChildProcessService";
+import { Configuration } from "../utils/Configuration";
 
 export class ProductController extends ControllerBase {
   private _productService: ProductService | null = null;
@@ -19,10 +21,14 @@ export class ProductController extends ControllerBase {
     try {
       const productData = req.body;
       const product = await this.productService.createProduct(productData);
-      this.cacheService.invalidateAffectedResults(product);
 
       res.addMessage("Product created successfully");
       res.apiResult(product, [], 201);
+
+      ChildProcessService.signal("invalidateCache", {
+        configs: Configuration.get("cache"),
+        product,
+      });
     } catch (error: any) {
       res.apiResult(null, [error.message], 500);
     }
@@ -62,6 +68,11 @@ export class ProductController extends ControllerBase {
       await this.cacheService.cacheResult(filters, result);
 
       res.apiResult(result);
+
+      // TODO: Must run in an scheduled job instead of here
+      ChildProcessService.signal("pruneCache", {
+        configs: Configuration.get("cache"),
+      });
     } catch (error: any) {
       res.apiResult(null, [error.message], 500);
     }

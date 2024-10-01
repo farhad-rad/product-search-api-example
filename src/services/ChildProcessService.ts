@@ -1,23 +1,29 @@
-import { createClient, RedisClientType } from "redis";
-import { createHash } from "crypto";
+import path from "path";
+import { Worker } from "worker_threads";
+
+type Workers = "pruneCache" | "invalidateCache";
 
 export class ChildProcessService {
-  private static instance: ChildProcessService;
-
-  private constructor() {}
-
-  public static getInstance(): ChildProcessService {
-    return (ChildProcessService.instance ??= new ChildProcessService());
-  }
-
-  private runCacheMaintenance(): void {
-    // const child = fork(
-    //   path.resolve(__dirname, "../child_processes/cacheInvalidationProcess.js")
-    // );
-    // child.send({ product });
-  }
-
-  async invalidateAffectedResults(newProduct: any): Promise<void> {
-    // TODO: call child process to invalidate cached results that might be affected by product change
+  public static signal(workerName: Workers, data?: any): void {
+    const workerPath = path.join(
+      __dirname,
+      "..",
+      "workers",
+      `${workerName}.js`
+    );
+    const worker = new Worker(workerPath);
+    worker.postMessage(data);
+    worker.on("message", (result) => {
+      console.log(`Result from worker thread: ${result}`);
+      worker.terminate();
+    });
+    worker.on("error", (error) => {
+      console.error(`Error in worker thread: ${error}`);
+    });
+    worker.on("exit", (code) => {
+      if (code !== 0) {
+        console.error(`Worker stopped with exit code ${code}`);
+      }
+    });
   }
 }
