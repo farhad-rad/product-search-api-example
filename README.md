@@ -220,21 +220,25 @@ http://localhost:3000
 - **Response**:
   ```json
   {
-    "totalItems": 25,
-    "currentPage": 1,
-    "totalPages": 2,
-    "pageSize": 10,
-    "products": [
-      {
-        "id": 1,
-        "name": "Smartphone",
-        "description": "A modern smartphone.",
-        "category": "electronics",
-        "price": 300,
-        "created_at": "2024-10-01T00:00:00.000Z"
-      },
-      ...
-    ]
+    "data": {
+      "totalItems": 25,
+      "currentPage": 1,
+      "totalPages": 2,
+      "pageSize": 10,
+      "items": [
+         {
+         "id": 1,
+         "name": "Smartphone",
+         "description": "A modern smartphone.",
+         "category": "electronics",
+         "price": 300,
+         "created_at": "2024-10-01T00:00:00.000Z"
+         },
+         ...
+      ]
+    },
+    "messages": [],
+    "ok": true
   }
   ```
 

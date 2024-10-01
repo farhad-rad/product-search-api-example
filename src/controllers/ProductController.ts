@@ -20,6 +20,7 @@ export class ProductController extends ControllerBase {
   async createProduct(req: Request, res: Response): Promise<void> {
     try {
       const productData = req.body;
+      // TODO: Add validation with middleware
       const product = await this.productService.createProduct(productData);
 
       res.addMessage("Product created successfully");
