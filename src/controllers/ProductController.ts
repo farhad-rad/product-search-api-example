@@ -41,6 +41,12 @@ export class ProductController extends ControllerBase {
         maxPrice: req.query.maxPrice
           ? parseFloat(req.query.maxPrice as string)
           : undefined,
+        after: req.query.after
+          ? new Date(req.query.after.toString())
+          : undefined,
+        before: req.query.before
+          ? new Date(req.query.before.toString())
+          : undefined,
         offset,
         limit,
       };

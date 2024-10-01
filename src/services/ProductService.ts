@@ -1,9 +1,7 @@
+import { IPagedList } from "../contracts/IPagedList";
 import { Product } from "../models/Product";
 import { ElasticSearchRepository } from "../repositories/ElasticSearchRepository";
 import { MySqlProductRepository } from "../repositories/MySqlProductRepository";
-import { CacheService } from "./CacheService";
-import { fork } from "child_process";
-import path from "path";
 
 export class ProductService {
   private static instance: ProductService;
@@ -23,7 +21,6 @@ export class ProductService {
     const connection = await this.mysqlRepo.getConnection();
     await connection.beginTransaction();
     try {
-      console.log("adding product", productData);
       const product = await this.mysqlRepo.create(productData);
       await this.elasticRepo.indexNewProduct(product);
       await connection.commit();
@@ -37,17 +34,18 @@ export class ProductService {
     }
   }
 
-  async getProducts(filters: any): Promise<any> {
-    const { ids, total } = await this.elasticRepo.searchAmongProducts(filters);
+  async getProducts(filters: any): Promise<IPagedList<Product>> {
+    const data = await this.elasticRepo.search(filters);
 
-    if (ids.length === 0) {
-      return { products: [], total: 0 };
-    }
+    const pageSize = filters.limit ?? 10;
+    const currentPage = (filters.offset ?? 0) / pageSize + 1;
 
-    const products = await this.mysqlRepo.getList({ ids, ...filters });
-
-    const result = { products, total };
-
-    return result;
+    return {
+      items: data.hits,
+      totalItems: data.total,
+      pageSize,
+      currentPage,
+      totalPages: Math.ceil(data.total / pageSize),
+    } as any;
   }
 }

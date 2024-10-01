@@ -21,7 +21,6 @@ export class CacheService {
   async getCachedResult(filters: any): Promise<any | null> {
     const hash = this.generateRequestSignatureHash(filters);
     const result = await this.client.hGet("request_responses", hash);
-    console.log(result);
     return result ? JSON.parse(result) : null;
   }
 
@@ -30,7 +29,6 @@ export class CacheService {
 
     await this.client.hIncrBy("request_hits", hash, 1);
     const totalHits = await this.client.hGet("request_hits", hash);
-    console.log(totalHits);
     if (totalHits && parseInt(totalHits) >= 10) {
       await this.client.hSet("request_filters", hash, JSON.stringify(filters));
       await this.client.hSet("request_responses", hash, JSON.stringify(result));

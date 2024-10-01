@@ -22,13 +22,15 @@ export class ElasticSearchRepository {
         name: product.name,
         description: product.description,
         category: product.category,
+        price: product.price,
+        createdAt: product.created_at,
       },
     });
   }
 
-  public async searchAmongProducts(
+  public async search(
     filters?: IProductFilters
-  ): Promise<{ ids: number[]; total: number }> {
+  ): Promise<{ hits: Product[]; total: number }> {
     filters ??= {};
     const must: any[] = [];
     const filter: any[] = [];
@@ -37,7 +39,7 @@ export class ElasticSearchRepository {
       must.push({
         multi_match: {
           query: filters.search,
-          fields: ["name^2", "description"],
+          fields: ["name", "description"],
         },
       });
     }
@@ -50,6 +52,23 @@ export class ElasticSearchRepository {
       });
     }
 
+    if (filters.minPrice || filters.maxPrice) {
+      const priceRange: any = {};
+      if (filters.minPrice) priceRange.gte = filters.minPrice;
+      if (filters.maxPrice) priceRange.lte = filters.maxPrice;
+      filter.push({ range: { price: priceRange } });
+    }
+
+    if (filters.after || filters.before) {
+      const dateRange: any = {};
+      if (filters.after) dateRange.gte = filters.after;
+      if (filters.before) dateRange.lte = filters.before;
+      filter.push({ range: { createdAt: dateRange } });
+    }
+
+    filters.limit ??= 10;
+    filters.offset ??= 0;
+
     const body = await this.client.search<any>({
       index: "products",
       body: {
@@ -60,18 +79,23 @@ export class ElasticSearchRepository {
           },
         },
       },
-      // TODO: Sync pagination with mysql. HOW?!
-      size: 10000,
+      size: filters.limit,
+      from: filters.offset,
     });
 
-    const ids = body.hits.hits.map((hit: any) => parseInt(hit._id));
+    const { hits, total } = body.hits;
+    const result: Product[] = hits.map((x) => ({
+      id: parseInt(x._id as string),
+      name: x._source.name,
+      description: x._source.description,
+      category: x._source.category,
+      price: x._source.price,
+      created_at: new Date(x._source.createdAt),
+    }));
 
     return {
-      ids,
-      total:
-        typeof body.hits.total == "number"
-          ? body.hits.total
-          : body.hits.total?.value ?? 0,
+      hits: result,
+      total: typeof total === "number" ? total : total?.value ?? 0,
     };
   }
 }
