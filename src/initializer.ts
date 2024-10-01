@@ -1,8 +1,12 @@
+import dotenv from "dotenv";
 import { ElasticSearchRepository } from "./repositories/ElasticSearchRepository";
 import { MySqlProductRepository } from "./repositories/MySqlProductRepository";
 import { ProductService } from "./services/ProductService";
+import { Configuration } from "./utils/Configuration";
 
+dotenv.config({ override: false });
 (async () => {
+  console.log(Configuration.get());
   const db = MySqlProductRepository.getInstance();
   const pool = db.getPool();
   console.log("dropping old tables");

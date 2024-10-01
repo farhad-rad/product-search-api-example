@@ -1,13 +1,17 @@
 import { createClient, RedisClientType } from "redis";
 import { createHash } from "crypto";
 import { IProductFilters } from "../models/IProductFilters";
+import { Configuration } from "../utils/Configuration";
 
 export class CacheService {
   private static instance: CacheService;
   private client: RedisClientType;
 
   private constructor() {
-    this.client = createClient({ url: "redis://localhost:3202" });
+    const cacheConfig = Configuration.get("cache");
+    this.client = createClient({
+      url: `redis://${cacheConfig.host}:${cacheConfig.port}`,
+    });
     this.client.connect();
   }
 

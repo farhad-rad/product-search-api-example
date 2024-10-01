@@ -4,18 +4,20 @@ import { NotImplementedError } from "../contracts/NotImplementedError";
 import { IProductFilters } from "../models/IProductFilters";
 import { Product } from "../models/Product";
 import { createPool, Pool, PoolConnection } from "mysql2/promise";
+import { Configuration } from "../utils/Configuration";
 
 export class MySqlProductRepository implements IRepository<Product> {
   private static instance: MySqlProductRepository;
   private pool: Pool;
 
   private constructor() {
+    const dbConfig = Configuration.get("database");
     this.pool = createPool({
-      host: "localhost",
-      user: "root",
-      port: 3201,
-      password: "rootpassword",
-      database: "products_db",
+      host: dbConfig.host,
+      user: dbConfig.user,
+      port: dbConfig.port,
+      password: dbConfig.password,
+      database: dbConfig.database,
     });
   }
 

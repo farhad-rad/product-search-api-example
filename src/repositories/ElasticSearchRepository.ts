@@ -3,13 +3,17 @@ import { IModelFilters } from "../contracts/IModelFilters";
 import { NotImplementedError } from "../contracts/NotImplementedError";
 import { IProductFilters } from "../models/IProductFilters";
 import { Product } from "../models/Product";
+import { Configuration } from "../utils/Configuration";
 
 export class ElasticSearchRepository {
   private static instance: ElasticSearchRepository;
   private client: Client;
 
   private constructor() {
-    this.client = new Client({ node: "http://localhost:3203" });
+    const esConfig = Configuration.get("elasticsearch");
+    this.client = new Client({
+      node: `http://${esConfig.host}:${esConfig.port}`,
+    });
   }
 
   public static getInstance(): ElasticSearchRepository {
@@ -17,7 +21,6 @@ export class ElasticSearchRepository {
   }
 
   public async initializeIndexes(): Promise<void> {
-    await this.client.indices.delete({ index: "products" });
     if (!(await this.client.indices.exists({ index: "products" }))) {
       await this.client.indices.create({
         index: "products",
