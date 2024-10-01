@@ -116,7 +116,7 @@ src
 
 ## **Installation**
 
-> This section will guide you through the setup and installation process. I will fill this section based on the specifics you provide.
+> This section will guide you through the setup and installation process.
 
 1. Clone the repository:
    ```bash
