@@ -2,50 +2,52 @@ version: '3.8'
 services:
   app:
     build: .
-    container_name: product-search-api
+    container_name: '${APP_NAME:-product}-application'
     ports:
-      - '3000:3000'
+      - '${APP_PORT:-3000}:${APP_PORT:-3000}'
     depends_on:
       - mysql
       - redis
       - elasticsearch
     volumes:
       - .:/usr/src/app
+    environment:
+      - MYSQL_HOST=mysql
+      - MYSQL_PORT=3306
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - ES_HOST=elasticsearch
+      - ES_PORT=9200
     command: npm run dev
 
   mysql:
     image: mysql:8.0
-    container_name: mysql
+    container_name: '${APP_NAME:-product}-mysql'
     environment:
-      MYSQL_ROOT_PASSWORD: rootpassword
-      MYSQL_DATABASE: products_db
+      MYSQL_ROOT_PASSWORD: ${MYSQL_PASS:-rootpassword}
+      MYSQL_DATABASE: ${MYSQL_DB:-products_db}
     ports:
-      - '3201:3306'
+      - '${MYSQL_PORT:-3201}:3306'
     volumes:
       - mysql-data:/var/lib/mysql
 
   redis:
-    image: redis:6.2
-    container_name: redis
+    image: redis:latest
+    container_name: '${APP_NAME:-product}-redis'
     ports:
-      - '3202:6379'
+      - '${REDIS_PORT:-3202}:6379'
 
   elasticsearch:
     image: docker.elastic.co/elasticsearch/elasticsearch:8.15.0
-    container_name: elasticsearch
-    environment: ['ES_JAVA_OPTS=-Xms2g -Xmx2g','bootstrap.memory_lock=true','discovery.type=single-node','xpack.security.enabled=false', 'xpack.security.enrollment.enabled=false']
+    container_name: '${APP_NAME:-product}-elasticsearch'
+    environment: 
+      - 'ES_JAVA_OPTS=-Xms2g -Xmx2g'
+      - 'bootstrap.memory_lock=true'
+      - 'discovery.type=single-node'
+      - 'xpack.security.enabled=false'
+      - 'xpack.security.enrollment.enabled=false'
     ports:
-      - '3203:9200'
-  
-  kibana:
-    image: docker.elastic.co/kibana/kibana:8.15.0
-    container_name: kib01
-    environment:
-      XPACK_APM_SERVICEMAPENABLED: "true"
-      XPACK_ENCRYPTEDSAVEDOBJECTS_ENCRYPTIONKEY: aaaaaaaa-c4d3-4a0a-8290-2abcb83ab3aa
-
-    ports:
-      - 5601:5601
+      - '${ES_PORT:-3203}:9200'
 
 volumes:
   mysql-data:
