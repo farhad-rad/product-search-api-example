@@ -35,7 +35,12 @@ export class InitDatabaseCommand implements ICommand {
 
       const sql = (
         await fs.readFile(
-          path.join(__dirname, "..", "resources", "mysql_migration_001.sql")
+          path.join(
+            __dirname,
+            "..",
+            "data",
+            "migration_001_create_products_table.sql"
+          )
         )
       ).toString();
 
@@ -53,38 +58,24 @@ export class InitDatabaseCommand implements ICommand {
     try {
       console.log(chalk.cyan(`Creating Elasticsearch Indexes`));
 
+      const index = JSON.parse(
+        (
+          await fs.readFile(
+            path.join(
+              __dirname,
+              "..",
+              "data",
+              "es_index_001_products_index.json"
+            )
+          )
+        ).toString()
+      );
+
       if (await esClient.indices.exists({ index: "products" })) {
         await esClient.indices.delete({ index: "products" });
       }
 
-      await esClient.indices.create({
-        index: "products",
-        body: {
-          settings: {
-            number_of_shards: 1,
-            number_of_replicas: 1,
-          },
-        },
-      });
-      await esClient.indices.putSettings({
-        index: "products",
-        body: {
-          settings: {
-            number_of_replicas: 1,
-          },
-        },
-      });
-      await esClient.indices.putMapping({
-        index: "products",
-        body: {
-          properties: {
-            productId: { type: "keyword" },
-            name: { type: "text" },
-            description: { type: "text" },
-            category: { type: "keyword" },
-          },
-        },
-      });
+      await esClient.indices.create(index);
     } catch (error) {
       console.error(error);
       return;

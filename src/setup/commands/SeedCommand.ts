@@ -20,7 +20,7 @@ export class SeedCommand implements ICommand {
     const data: any[] = JSON.parse(
       (
         await fs.readFile(
-          path.join(__dirname, "..", "resources", "products_seed.json")
+          path.join(__dirname, "..", "data", "seed_001_products.json")
         )
       ).toString()
     );
