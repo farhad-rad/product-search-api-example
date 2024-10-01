@@ -1,56 +1,17 @@
 import { Client } from "@elastic/elasticsearch";
-import { IModelFilters } from "../contracts/IModelFilters";
-import { NotImplementedError } from "../contracts/NotImplementedError";
 import { IProductFilters } from "../models/IProductFilters";
 import { Product } from "../models/Product";
-import { Configuration } from "../utils/Configuration";
+import { getElasticsearchClient } from "../lib/elasticsearchClient";
 
 export class ElasticSearchRepository {
   private static instance: ElasticSearchRepository;
-  private client: Client;
-
-  private constructor() {
-    const esConfig = Configuration.get("elasticsearch");
-    this.client = new Client({
-      node: `http://${esConfig.host}:${esConfig.port}`,
-    });
-  }
-
   public static getInstance(): ElasticSearchRepository {
     return (ElasticSearchRepository.instance ??= new ElasticSearchRepository());
   }
 
-  public async initializeIndexes(): Promise<void> {
-    if (!(await this.client.indices.exists({ index: "products" }))) {
-      await this.client.indices.create({
-        index: "products",
-        body: {
-          settings: {
-            number_of_shards: 1,
-            number_of_replicas: 1,
-          },
-        },
-      });
-      await this.client.indices.putSettings({
-        index: "products",
-        body: {
-          settings: {
-            number_of_replicas: 1,
-          },
-        },
-      });
-      await this.client.indices.putMapping({
-        index: "products",
-        body: {
-          properties: {
-            productId: { type: "keyword" }, // Unique identifier for filtering
-            name: { type: "text" }, // Text field for full-text search
-            description: { type: "text" },
-            category: { type: "keyword" }, // Category filter
-          },
-        },
-      });
-    }
+  private _client: Client | null = null;
+  public get client() {
+    return (this._client ??= getElasticsearchClient());
   }
 
   public async indexNewProduct(product: Product): Promise<void> {

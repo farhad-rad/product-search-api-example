@@ -5,29 +5,19 @@ import { IProductFilters } from "../models/IProductFilters";
 import { Product } from "../models/Product";
 import { createPool, Pool, PoolConnection } from "mysql2/promise";
 import { Configuration } from "../utils/Configuration";
+import { getMySqlClient } from "../lib/mysqlClient";
 
 export class MySqlProductRepository implements IRepository<Product> {
   private static instance: MySqlProductRepository;
-  private pool: Pool;
-
-  private constructor() {
-    const dbConfig = Configuration.get("database");
-    this.pool = createPool({
-      host: dbConfig.host,
-      user: dbConfig.user,
-      port: dbConfig.port,
-      password: dbConfig.password,
-      database: dbConfig.database,
-    });
-  }
-
   public static getInstance(): MySqlProductRepository {
     return (MySqlProductRepository.instance ??= new MySqlProductRepository());
   }
 
-  public getPool(): Pool {
-    return this.pool;
+  private _pool: Pool | null = null;
+  public get pool() {
+    return (this._pool ??= getMySqlClient());
   }
+
   public async getConnection(): Promise<PoolConnection> {
     return await this.pool.getConnection();
   }
@@ -35,42 +25,6 @@ export class MySqlProductRepository implements IRepository<Product> {
   async getList(filters?: IProductFilters): Promise<Product[]> {
     // TODO: For further implementations
     throw new NotImplementedError();
-  }
-
-  async getPaginatedList(filters?: IProductFilters): Promise<Product[]> {
-    filters ??= {};
-
-    let sql = "SELECT * FROM products WHERE 1=1";
-    const params: any[] = [];
-
-    if (filters.ids) {
-      sql += " AND `id` IN (?)";
-      params.push(filters.ids);
-    }
-    if (filters.minPrice) {
-      sql += " AND `price` >= ?";
-      params.push(filters.minPrice);
-    }
-    if (filters.maxPrice) {
-      sql += " AND `price` <= ?";
-      params.push(filters.maxPrice);
-    }
-
-    const fomattedCountQuery = this.pool.format(
-      `select count(*) as c from (${sql}) as a`,
-      params
-    );
-
-    filters.offset ??= 0;
-    filters.limit ??= 10;
-    sql += " LIMIT ? OFFSET ?";
-    params.push(filters.limit, filters.offset);
-    const formattedQuery = this.pool.format(sql, params);
-
-    const [_c] = await this.pool.execute(fomattedCountQuery);
-    const total = (_c as any)[0]?.c ?? 0;
-    const [rows] = await this.pool.execute(formattedQuery);
-    return rows as Product[];
   }
 
   async create(model: Omit<Product, "id">): Promise<Product> {

@@ -44,7 +44,7 @@ export class ProductService {
       return { products: [], total: 0 };
     }
 
-    const products = await this.mysqlRepo.getPaginatedList({ ids, ...filters });
+    const products = await this.mysqlRepo.getList({ ids, ...filters });
 
     const result = { products, total };
 

@@ -1,22 +1,17 @@
-import { createClient, RedisClientType } from "redis";
+import { RedisClientType } from "redis";
 import { createHash } from "crypto";
 import { IProductFilters } from "../models/IProductFilters";
-import { Configuration } from "../utils/Configuration";
+import { getRedisClient } from "../lib/redisClient";
 
 export class CacheService {
   private static instance: CacheService;
-  private client: RedisClientType;
-
-  private constructor() {
-    const cacheConfig = Configuration.get("cache");
-    this.client = createClient({
-      url: `redis://${cacheConfig.host}:${cacheConfig.port}`,
-    });
-    this.client.connect();
-  }
-
   public static getInstance(): CacheService {
     return (CacheService.instance ??= new CacheService());
+  }
+
+  private _client: RedisClientType | null = null;
+  public get client() {
+    return (this._client ??= getRedisClient());
   }
 
   private generateRequestSignatureHash(filters: IProductFilters): string {
