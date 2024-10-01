@@ -21,9 +21,10 @@ export class ProductController extends ControllerBase {
       const product = await this.productService.createProduct(productData);
       this.cacheService.invalidateAffectedResults(product);
 
-      res.status(201).json(product);
+      res.addMessage("Product created successfully");
+      res.apiResult(product, [], 201);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      res.apiResult(null, [error.message], 500);
     }
   }
 
@@ -53,16 +54,16 @@ export class ProductController extends ControllerBase {
 
       const cachedResult = await this.cacheService.getCachedResult(filters);
       if (cachedResult) {
-        res.json(cachedResult);
+        res.apiResult(cachedResult);
         return;
       }
 
       const result = await this.productService.getProducts(filters);
       await this.cacheService.cacheResult(filters, result);
 
-      res.json(result);
+      res.apiResult(result);
     } catch (error: any) {
-      res.status(500).json({ error: error.message });
+      res.apiResult(null, [error.message], 500);
     }
   }
 }

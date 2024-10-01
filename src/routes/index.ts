@@ -6,7 +6,7 @@ const router = Router();
 router.use("/products", productRouter);
 
 router.all("*", (_, res) => {
-  res.status(404).json({ error: "Not found" });
+  res.apiResult(null, [], 404);
 });
 
 export default router;
